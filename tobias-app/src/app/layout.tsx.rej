@@ -1,0 +1,14 @@
+diff a/src/app/layout.tsx b/src/app/layout.tsx	(rejected hunks)
+@@ -1,6 +1,10 @@
+-import "./globals.css";
++import "./globals.css";
++import "./brand.css";
++import Header from "@/components/Header";
++import { ToastProvider } from "@/components/ui/Toast";
+
+ export default function RootLayout({ children }: { children: React.ReactNode }) {
+   return (
+     <html lang="es">
+-      <body>{children}</body>
++      <body>
++        <ToastProvider>

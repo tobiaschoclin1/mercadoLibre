@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  password  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relaciones que ya teníamos
+  orders    Order[]
+  products  Product[]
+
+  // --- LÍNEA FALTANTE AÑADIDA AQUÍ ---
+  customers Customer[]
+  // --- FIN DE LA CORRECCIÓN ---
+
+  // Campos para la integración con Mercado Libre
+  mercadolibreId             String?   @unique
+  mercadolibreAccessToken    String?   @db.Text
+  mercadolibreRefreshToken   String?   @db.Text
+  mercadolibreTokenExpiresAt DateTime?
+
+  // Campos para la integración con Tienda Nube
+  tiendanubeStoreId    String?   @unique
+  tiendanubeUserId     String?
+  tiendanubeAccessToken String?  @db.Text
+  tiendanubeTokenType   String?
+  tiendanubeScope       String?
+}
+
+model Product {
+  id        String   @id @default(cuid())
+  name      String
+  cost      Float
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  orders    Order[]
+  user      User     @relation(fields: [userId], references: [id])
+  promotionId       String?   @unique
+  promotionExpiresAt DateTime?
+  promotionLink     String?
+}
+
+model Order {
+  id          String   @id @default(cuid())
+
+  // Nuevos campos para datos de MELI
+  mercadolibreOrderId BigInt @unique // Usamos BigInt para el ID numérico de la orden de MELI
+  status      String?
+  orderDate   DateTime
+
+  totalAmount Float
+  createdAt   DateTime @default(now())
+
+  product     Product  @relation(fields: [productId], references: [id])
+  productId   String
+
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+
+  // Nueva relación con Customer
+  customer    Customer @relation(fields: [customerId], references: [id])
+  customerId  String
+}
+
+model Customer {
+  id                  String   @id @default(cuid())
+  mercadolibreId      BigInt   @unique // El ID de comprador de Mercado Libre
+  nickname            String
+  firstName           String?
+  lastName            String?
+  email               String?  @unique
+
+  orders              Order[]  // Un cliente puede tener muchas órdenes
+
+  // Relación para saber a qué vendedor de nuestra app pertenece este cliente
+  user                User     @relation(fields: [userId], references: [id])
+  userId              String
+}
